@@ -1,0 +1,235 @@
+Function Mes()
+    Worksheets.Add.Name = "Mes"
+End Function
+
+Function CopiarYPegarEV7()
+
+    Dim lastRow As Long
+    Dim wsSource As Worksheet
+    Dim wsDestination As Worksheet
+    
+    ' Establece la hoja de origen (EV7)
+    Set wsSource = Worksheets("EV7")
+    
+    ' Verifica si la hoja de destino ("Mes") existe
+    On Error Resume Next
+    Set wsDestination = Worksheets("Mes")
+    On Error GoTo 0
+    
+    ' Si la hoja de destino no existe, créala
+    If wsDestination Is Nothing Then
+        Set wsDestination = Worksheets.Add(After:=Worksheets(Worksheets.Count))
+        wsDestination.Name = "Mes"
+    End If
+    
+    ' Encuentra la última fila en la columna "F" de la hoja de origen
+    lastRow = wsSource.Cells(wsSource.Rows.Count, "F").End(xlUp).Row
+    
+    ' Copia y pega los datos desde la hoja de origen a la hoja de destino
+    wsSource.Range("A1:F" & lastRow).Copy
+    wsDestination.Cells(1, 1).PasteSpecial xlPasteAll ' Pega solo los valores para evitar problemas de formato
+    
+    ' Limpia el portapapeles
+    Application.CutCopyMode = False
+
+
+    
+End Function
+
+Function CopiarYPegarEV6()
+
+    Dim lastRow As Long
+    Dim lastRowDes As Long
+    Dim wsSource As Worksheet
+    Dim wsDestination As Worksheet
+    
+    ' Establece la hoja de origen
+    Set wsSource = Worksheets("EV6")
+    
+    ' Verifica si la hoja de destino ("Mes") existe
+    On Error Resume Next
+    Set wsDestination = Worksheets("Mes")
+    On Error GoTo 0
+    
+    ' Si la hoja de destino no existe, créala
+    If wsDestination Is Nothing Then
+        Set wsDestination = Worksheets.Add(After:=Worksheets(Worksheets.Count))
+        wsDestination.Name = "Mes"
+    End If
+    
+    ' Encuentra la última fila en la columna "F" de la hoja de origen
+    lastRow = wsSource.Cells(wsSource.Rows.Count, "F").End(xlUp).Row
+    
+    ' Encuentra la última fila en la columna "F" de la hoja de destino
+    lastRowDes = wsDestination.Cells(wsDestination.Rows.Count, "F").End(xlUp).Row
+    
+    ' Copia y pega los datos desde la hoja de origen a la hoja de destino
+    wsSource.Range("A2:F" & lastRow).Copy
+    
+    wsDestination.Cells((lastRowDes + 1), 1).PasteSpecial xlPasteAll  ' Pega solo los valores para evitar problemas de formato
+    
+    ' Limpia el portapapeles
+    Application.CutCopyMode = False
+    
+End Function
+Function OrdenMultinivel()
+
+    
+    Dim lastRow As Long
+    Dim ws As Worksheet
+    
+    ' Establece la hoja de trabajo "Mes"
+    Set ws = Worksheets("Mes")
+    
+    ' Encuentra la última fila en la columna "F" de la hoja de trabajo "Mes"
+    lastRow = ws.Cells(ws.Rows.Count, "F").End(xlUp).Row
+   
+    ' Limpia cualquier campo de orden previo
+    ws.Sort.SortFields.Clear
+    
+    ' Aplica la ordenación multinivel (primero por la columna A y luego por la columna F)
+    ws.Range("A1:F" & lastRow).Sort Key1:=ws.Range("A1"), Key2:=ws.Range("C1"), Header:=xlYes, Order1:=xlAscending, Order2:=xlAscending
+
+End Function
+
+
+
+Function VerificarRepeticiones()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim movilAnt As String
+    Dim movil As String
+    Dim estadoAnt As String
+    Dim estado As String
+    
+    ' Referencia a la hoja de Excel activa
+    Set ws = Worksheets("Mes")
+    
+    ' Encuentra la última fila en la columna "F" de la hoja de trabajo "Mes"
+    lastRow = ws.Cells(ws.Rows.Count, "F").End(xlUp).Row
+   
+   
+    ' Bucle para recorrer las celdas en la columna F
+    For i = 2 To lastRow ' Empezamos desde la segunda fila asumiendo que la primera fila es la cabecera
+               
+        movilAnt = ws.Cells((i - 1), "A").Value
+        movil = ws.Cells(i, "A").Value
+       ' Obtén el valor de la celda en la columna A
+        estadoAnt = UCase(Trim(ws.Cells((i - 1), "F").Value))
+        estado = UCase(Trim(ws.Cells(i, "F").Value)) ' Convertimos a mayúsculas y eliminamos espacios en blanco
+        
+        If movil <> movilAnt And estado = estadoAnt And estado = "ENCENDIDO" Then
+                    ' ws.Cells((i - 1), "C").Interior.ColorIndex = 25
+                    ws.Rows(i - 1).Delete
+                    i = i - 1
+        ElseIf movil <> movilAnt And estado = "APAGADO" Then
+                    ' ws.Cells(i, "C").Interior.ColorIndex = 26
+                    ws.Rows(i).Delete
+                    i = i - 1
+        ElseIf movil = movilAnt And estado = estadoAnt Then
+                ws.Cells(i, "C").Interior.ColorIndex = 25
+                ws.Rows(i).Delete
+                i = i - 1
+        ElseIf movil = "" Then
+            i = lastRow
+        End If
+    Next i
+End Function
+Function AgregarFechas()
+
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim fecha As Date
+    
+     Set ws = Worksheets("Mes")
+     ws.Columns(6).Insert
+     ws.Columns(7).Insert
+     ws.Cells(1, "F").Value = "Fecha"
+     ws.Cells(1, "G").Value = "Hora"
+     
+    ' Encuentra la última fila en la columna "F" de la hoja de trabajo "Mes"
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+   
+      
+    ' Bucle para recorrer las celdas en la columna F
+    For i = 2 To lastRow ' Empezamos desde la segunda fila asumiendo que la primera fila es la cabecera
+      '   Obtén el valor de la celda en la columna C
+        valorCelda = ws.Cells(i, 3).Value
+        ws.Cells(i, 6).Value = valorCelda
+        ws.Cells(i, 7).Value = valorCelda
+    Next i
+    ws.Columns(2).NumberFormat = "dd-mm"
+    ws.Columns(6).NumberFormat = "dd/mm/yyyy"
+    ws.Columns(7).NumberFormat = "[$-80A]hh:mm:ss AM/PM"
+End Function
+
+Function tiempOper()
+
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    Set ws = Worksheets("Mes")
+     
+     
+    ' Encuentra la última fila en la columna "F" de la hoja de trabajo "Mes"
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+     ws.Cells(1, "I").Value = "Tiempo de la operación"
+      
+    ' Bucle para recorrer las celdas en la columna F
+    For i = 2 To lastRow ' Empezamos desde la segunda fila asumiendo que la primera fila es la cabecera
+      '   Obtén el valor de la celda en la columna C
+      If i Mod 2 <> 0 Then
+            ws.Cells(i, "I").Value = ((ws.Cells(i, "C")) - (ws.Cells((i - 1), "C")))
+                       
+        End If
+    Next i
+
+End Function
+
+Sub Main()
+    Mes
+    CopiarYPegarEV7
+    CopiarYPegarEV6
+    OrdenMultinivel
+    ' VerificarRepeticionesColor
+    VerificarRepeticiones
+    AgregarFechas
+    tiempOper
+End Sub
+
+
+
+Function VerificarRepeticionesColor()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    Dim c As Long
+    Dim palabra As String
+    
+    
+    ' Referencia a la hoja de Excel activa
+    Set ws = Worksheets("Mes")
+    ' Encuentra la última fila en la columna "F" de la hoja de trabajo "Mes"
+    lastRow = ws.Cells(ws.Rows.Count, "F").End(xlUp).Row
+    ws.Cells(3, "H").Value = lastRow
+    ' Bucle para recorrer las celdas en la columna F
+    c = 2
+    For i = 2 To lastRow ' Empezamos desde la segunda fila asumiendo que la primera fila es la cabecera
+      '   Obtén el valor de la celda en la columna A
+        palabra = ws.Cells(i, "F").Value ' Convertimos a mayúsculas y eliminamos espacios en blanco
+        ' Verifica si la palabra es "ENCENDIDO" o "APAGADO"
+        If c Mod 2 <> 0 And palabra = "encendido" Then
+            ws.Cells(i, "F").Interior.ColorIndex = 25
+            c = c - 1
+        ElseIf c Mod 2 = 0 And palabra = "apagado" Then
+             ws.Cells(i, "F").Interior.ColorIndex = 25
+             c = c - 1
+        End If
+        c = c + 1
+    Next i
+End Function
